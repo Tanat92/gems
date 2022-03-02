@@ -97,125 +97,61 @@
     };
     document.body.appendChild(script);
   </script>
-  <script src="https://yandex.ru/games/sdk/v2"></script>
-  <script>
-    var player;
-    var sdk;
-    var payments = null;
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 
-    YaGames.init({
-        adv:{
-          onAdvClose: wasShown =>{console.info('adv closed!');
-        }
+    <script type="text/javascript">
+
+      vkBridge.send('VKWebAppInit');
+
+
+      function share(){
+        vkBridge.send("VKWebAppShowWallPostBox", {"message": "Смотри какая класная игра!","attachments": "https://vk.com/app8067968"
+      }); 
       }
-      })
-        .then(ysdk => {
-            sdk = ysdk;
-            sdk.adv.showFullscreenAdv({callbacks:{}});
-      });
+      function auth(){
+        vkBridge.send('VKWebAppGetUserInfo').then(_info =>{
+          console.log(_info);
+          unityI.SendMessage('YandexSDK', 'AuthenticateSuccess', JSON.stringify(_info));
+        });
+      }
+      function authRep(){
+        
+      }
+
+      function getUserData(){
+        vkBridge.send("VKWebAppStorageGet",{"keys":["_save"]}).then(data =>{
+        console.log(data);
+        unityI.SendMessage('YandexSDK', 'DataGetting', JSON.stringify(data));
+      });}
+
+      function setUserData(data){
+        console.log(data);
+        vkBridge.send('VKWebAppStorageSet',{"key": "_save" , "value": data}).then(_info =>{
+          console.log("Saved!")});
+      }
+
+      function showFullscrenAd(){
+        vkBridge.send('VKWebAppShowNativeAds',{ad_format:"interstitial"}).then(data => {
+          console.log(data);});
+      }
+      
+      function showRewardedAd(){
+        vkBridge.send('VKWebAppShowNativeAds',{ad_format:"reward"}).then(data => {
+          console.log(data);
+          unityI.SendMessage('YandexSDK', 'RewardGetting',JSON.stringify(data.result));})
+      }
+    
       function authPlayer(){
         
       }
       function Start(){
       }
-    var lb;
-
-    function GetLeaderBoard() {
-      sdk.getLeaderboards().then(_lb => lb = _lb);
-    }
-
-    function SetLeaderBoard(score) {
-      sdk.getLeaderboards()
-        .then(lb => {
-          console.log(score);
-          lb.setLeaderboardScore('LeaderBoard', score);
-        });
-    }
-
-    function GetLeaderBoardEntries() {
-      sdk.getLeaderboards()
-        .then(lb => {
-          lb.getLeaderboardEntries('LeaderBoard', { quantityTop: 10, includeUser: true, quantityAround: 3 }).then(res => {
-            console.log(res);
-            unityI.SendMessage('YandexSDK', 'BoardEntriesReady', JSON.stringify(res));
-          });
-        });
-    }
-
+    
     function authRep() {
       
     }
 
-    function auth() {
-      initPlayer().then(() => {
-        getUser();
-      }).catch(err => {
-        sdk.auth.openAuthDialog().then(() => {
-          initPlayer();
-          getUser();
-        });
-      });
-    }
-
-
-    function initPlayer() {
-      console.log('InitPlayerTry')
-      return sdk.getPlayer().then(_player => {
-        console.log('InitPlayer2');
-        player = _player;
-      });
-    }
-
-    function getUser() {
-      console.log('try to get Name');
-      var data = player.getName();
-      unityI.SendMessage('YandexSDK', 'AuthenticateSuccess', data);
-      console.log('getName done');
-
-    }
-
-    function getUserData() {
-      player.getData().then(stats => {
-        console.log('Data is getting');
-        console.log(JSON.stringify(stats));
-        GetLeaderBoard();
-        unityI.SendMessage('YandexSDK', 'DataGetting', JSON.stringify(stats));
-      });
-    }
-
-    function setUserData(_data) {
-      console.log('Try Save');
-      console.log(_data);
-      player.setData({ data: _data }).then(() => {
-        console.log('saved');
-      }).catch(() => { console.log('unsaved') });
-    }
-
-    function showFullscrenAd() {
-      sdk.adv.showFullscreenAdv({
-        callbacks: {
-          onClose: function (wasShown) { },
-          onError: function (error) { }
-        }
-      })
-    }
-
-    function showRewardedAd(id) {
-      sdk.adv.showRewardedVideo({
-        callbacks: {
-          onOpen: () => { },
-          onRewarded: () => {
-            unityI.SendMessage('YandexSDK', 'RewardGetting');
-            console.log('Rewarded! Id: ' + id);
-          },
-          onClose: () => { },
-          onError: (e) => {
-            var data = { "id": id, "error": error };
-            console.log('Error while open video ad:', e);
-          }
-        }
-      })
-    }
+    
   </script>
   </body>
 </html>
